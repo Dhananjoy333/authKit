@@ -1,0 +1,31 @@
+{
+  "name": "authkit",
+  "version": "1.0.0",
+  "description": "Self-hosted, headless authentication and session engine",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test-auth.ts"
+  },
+  "peerDependencies": {
+    "pg": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@prisma/client": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.23.1",
+    "dotenv": "^18.0.10",
+    "pg": "^8.23.1",
+    "prisma": "^7.10.1",
+    "typescript": "^5.0.0"
+  }
+}
