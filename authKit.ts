@@ -6,17 +6,17 @@ const scryptAsync = promisify(crypto.scrypt);
 
 // --- Models ---
 export interface User {
-  id: string;
+  user_id: string;
   email: string;
-  name? : string | null;
-  image? : string | null;
-  passwordHash: string; // "hash.salt"
+  username?: string | null;
+  image?: string | null;
+  hashed_password: string; // "hash.salt"
 }
 
 export interface Session {
-  id: string; // SHA-256 hash of the raw token
-  userId: string;
-  expiresAt: Date;
+  session_id: string; // SHA-256 hash of the raw token
+  user_id: string;
+  expire_at: Date;
 }
 
 export interface RegisterOptions{
@@ -86,14 +86,14 @@ export class AuthEngine {
 
     const { hash, salt } = await hashPassword(plainPassword);
     const user: User = {
-      id: crypto.randomUUID(),
+      user_id: crypto.randomUUID(),
       email,
-      name : options?.name,
-      image : options?.image, 
-      passwordHash: `${hash}.${salt}`,
+      username: options?.name ?? null,
+      image: options?.image ?? null,
+      hashed_password: `${hash}.${salt}`,
     };
 
-    await this.adapter.createUser(user.id, user);
+    await this.adapter.createUser(user.user_id, user);
 
     return user;
   }
@@ -108,7 +108,7 @@ export class AuthEngine {
       throw new Error("INVALID_CREDENTIALS");
     }
 
-    const [storedHash, salt] = user.passwordHash.split(".");
+    const [storedHash, salt] = user.hashed_password.split(".");
     const isValid = await verifyPassword(plainPassword, storedHash, salt);
 
     if (!isValid) {
@@ -121,10 +121,10 @@ export class AuthEngine {
     // 2. Hash the token before storing it in the database
     const hashedSessionId = hashToken(sessionToken);
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
-    const session = {
-      id: hashedSessionId,
-      userId: user.id,
-      expiresAt,
+    const session: Session = {
+      session_id: hashedSessionId,
+      user_id: user.user_id,
+      expire_at: expiresAt,
     };
     await this.adapter.createSession(hashedSessionId, session)
 
@@ -141,12 +141,12 @@ export class AuthEngine {
     if (!session) return null;
 
     // Check expiration
-    if (Date.now() >= session.expiresAt.getTime()) {
+    if (Date.now() >= session.expire_at.getTime()) {
       await this.adapter.deleteSession(hashedSessionId);
       return null;
     }
 
-    const user = await this.adapter.getUserById(session.userId);
+    const user = await this.adapter.getUserById(session.user_id);
     if (!user) return null;
 
     return { user, session };
