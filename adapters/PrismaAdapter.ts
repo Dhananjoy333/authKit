@@ -8,29 +8,11 @@ export class PrismaAdapter implements DatabaseAdapter {
      }
 
     async getUserByEmail(email: string): Promise<User | null> {
-        const raw = await this.prisma.users.findUnique({ where: { email } });
-        if (!raw) return null;
-
-        return {
-            id: raw.user_id,
-            email: raw.email,
-            passwordHash: raw.hashed_password,
-            name: raw.username,
-            image: raw.image,
-        };
+        return await this.prisma.users.findUnique({ where: { email } });
     }
 
     async getUserById(id: string): Promise<User | null> {
-        const raw = await this.prisma.users.findUnique({ where: { user_id: id } });
-        if (!raw) return null;
-
-        return {
-            id: raw.user_id,
-            email: raw.email,
-            passwordHash: raw.hashed_password,
-            name: raw.username,
-            image: raw.image,
-        };
+        return await this.prisma.users.findUnique({ where: { user_id: id } });
     }
 
     async createUser(id: string, user: User): Promise<void> {
@@ -38,8 +20,8 @@ export class PrismaAdapter implements DatabaseAdapter {
             data: {
                 user_id: id,
                 email: user.email,
-                hashed_password: user.passwordHash,
-                username: user.name,
+                hashed_password: user.hashed_password,
+                username: user.username,
                 image: user.image,
             },
         });
@@ -49,23 +31,16 @@ export class PrismaAdapter implements DatabaseAdapter {
         await this.prisma.sessions.create({
             data: {
                 session_id: hashedSessionId,
-                user_id: session.userId,
-                expire_at: session.expiresAt,
+                user_id: session.user_id,
+                expire_at: session.expire_at,
             },
         });
     }
 
     async getSessionById(hashedSessionId: string): Promise<Session | null> {
-        const raw = await this.prisma.sessions.findUnique({
+        return await this.prisma.sessions.findUnique({
             where: { session_id: hashedSessionId },
         });
-        if (!raw) return null;
-
-        return {
-            id: raw.session_id,
-            userId: raw.user_id,
-            expiresAt: raw.expire_at,
-        };
     }
 
     async deleteSession(hashedSessionId: string): Promise<void> {

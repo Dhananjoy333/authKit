@@ -26,30 +26,64 @@ import { AuthEngine } from "./authKit.ts";
 // }
 // testPrisma();
 
-import { Pool } from "pg";
-import { PostgresAdapter } from "./adapters/PostgresAdapter.ts";
+// import { Pool } from "pg";
+// import { PostgresAdapter } from "./adapters/PostgresAdapter.ts";
 
-async function testPostgres() {
-    // 1. Create a raw PostgreSQL connection pool using the same connection string
+// async function testPostgres() {
+//     // 1. Create a raw PostgreSQL connection pool using the same connection string
+//     const pool = new Pool({
+//         connectionString: process.env.DATABASE_URL,
+//     });
+//     // 2. Pass the pool into PostgresAdapter
+//     const adapter = new PostgresAdapter(pool);
+//     // 3. Initialize AuthEngine with the adapter
+//     const auth = new AuthEngine(adapter);
+//     console.log("--- Testing PostgresAdapter ---");
+//     // 4. Register a new user
+//     const newUser = await auth.register(
+//         "priya.patel@example.com",
+//         "SecurePass123!",
+//         { name: "Priya", image: "https://example.com/priya.png" }
+//     );
+//     console.log("Registered via PG:", newUser);
+//     // 5. Test Login
+//     const loginRes = await auth.login("priya.patel@example.com", "SecurePass123!");
+//     console.log("Logged in via PG. Session token:", loginRes.sessionToken);
+//     // 6. Close the connection pool so the Node process exits cleanly
+//     await pool.end();
+// }
+// testPostgres();
+
+
+import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { users, sessions } from "./drizzle/schema.ts";
+import { DrizzleAdapter } from "./adapters/DrizzleAdapter.ts";
+
+async function testDrizzle() {
+    // 1. Connect to PostgreSQL
     const pool = new Pool({
         connectionString: process.env.DATABASE_URL,
     });
-    // 2. Pass the pool into PostgresAdapter
-    const adapter = new PostgresAdapter(pool);
-    // 3. Initialize AuthEngine with the adapter
-    const auth = new AuthEngine(adapter);
-    console.log("--- Testing PostgresAdapter ---");
+
+    // 2. Initialize Drizzle with that connection
+    const db = drizzle(pool);
+
+    // 3. Pass `db` and your schema tables into DrizzleAdapter
+    const auth = new AuthEngine(new DrizzleAdapter(db, users, sessions));
+
+    console.log("--- Testing DrizzleAdapter ---");
     // 4. Register a new user
     const newUser = await auth.register(
-        "priya.patel@example.com",
-        "SecurePass123!",
-        { name: "Priya", image: "https://example.com/priya.png" }
+        "AshishBarman@example.com",
+        "Password123@",
+        { name: "Ashish", image: "https://example.com/Ashish.png" }
     );
     console.log("Registered via PG:", newUser);
-    // 5. Test Login
-    const loginRes = await auth.login("priya.patel@example.com", "SecurePass123!");
-    console.log("Logged in via PG. Session token:", loginRes.sessionToken);
-    // 6. Close the connection pool so the Node process exits cleanly
+
+
+    // 4. Close the pool when the script finishes
     await pool.end();
 }
-testPostgres();
+
+testDrizzle()

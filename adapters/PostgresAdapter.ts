@@ -12,16 +12,7 @@ export class PostgresAdapter implements DatabaseAdapter {
       'SELECT * FROM "Users" WHERE email = $1',
       [email],
     );
-    const row = res.rows[0];
-    if (!row) return null;
-
-    return {
-      id: row.user_id,
-      email: row.email,
-      passwordHash: row.hashed_password,
-      name: row.username,
-      image: row.image,
-    };
+    return res.rows[0] ?? null;
   }
 
   async getUserById(id: string): Promise<User | null> {
@@ -29,16 +20,7 @@ export class PostgresAdapter implements DatabaseAdapter {
       'SELECT * FROM "Users" WHERE user_id = $1',
       [id],
     );
-    const row = res.rows[0];
-    if (!row) return null;
-
-    return {
-      id: row.user_id,
-      email: row.email,
-      passwordHash: row.hashed_password,
-      name: row.username,
-      image: row.image,
-    };
+    return res.rows[0] ?? null;
   }
 
   async createUser(id: string, user: User): Promise<void> {
@@ -47,8 +29,8 @@ export class PostgresAdapter implements DatabaseAdapter {
       [
         id,
         user.email,
-        user.passwordHash,
-        user.name ?? null,
+        user.hashed_password,
+        user.username ?? null,
         user.image ?? null,
       ],
     );
@@ -57,7 +39,7 @@ export class PostgresAdapter implements DatabaseAdapter {
   async createSession(id: string, session: Session): Promise<void> {
     await this.pool.query(
       'INSERT INTO "Sessions" (session_id, user_id, expire_at) VALUES ($1, $2, $3)',
-      [id, session.userId, session.expiresAt],
+      [id, session.user_id, session.expire_at],
     );
   }
 
@@ -66,14 +48,7 @@ export class PostgresAdapter implements DatabaseAdapter {
       'SELECT * FROM "Sessions" WHERE session_id = $1',
       [id],
     );
-    const row = res.rows[0];
-    if (!row) return null;
-
-    return {
-      id: row.session_id,
-      userId: row.user_id,
-      expiresAt: row.expire_at,
-    };
+    return res.rows[0] ?? null;
   }
 
   async deleteSession(id: string): Promise<void> {
